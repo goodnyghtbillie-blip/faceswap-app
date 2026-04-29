@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from "react";
 
 const RAPIDAPI_KEY  = "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148";
 const RAPIDAPI_HOST = "deepfake-face-swap-ai.p.rapidapi.com";
-const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/target-face`;
+const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/swap-face`;
+const IMGBB_KEY     = "0bb61baa964c3c1577a7e26924ca4379";
 
 function fileToBase64(file) {
   return new Promise((res, rej) => {
@@ -17,7 +18,10 @@ async function uploadToImgBB(base64) {
   const b64 = base64.replace(/^data:image\/[a-z]+;base64,/, "");
   const form = new FormData();
   form.append("image", b64);
-  const res = await fetch("https://api.imgbb.com/1/upload?key=0bb61baa964c3c1577a7e26924ca4379“ { method: "POST", body: form });
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+    method: "POST",
+    body: form
+  });
   const data = await res.json();
   if (!data?.data?.url) throw new Error("Image upload failed");
   return data.data.url;
@@ -29,18 +33,25 @@ async function callFaceSwapAPI(srcB64, tgtB64, onProgress) {
   onProgress(30, "Uploading target...");
   const targetUrl = await uploadToImgBB(tgtB64);
   onProgress(55, "Running AI swap...");
-  const body = new URLSearchParams();
-  body.append("source_url", sourceUrl);
-  body.append("target_url", targetUrl);
   const res = await fetch(RAPIDAPI_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", "x-rapidapi-host": RAPIDAPI_HOST, "x-rapidapi-key": RAPIDAPI_KEY },
-    body: body.toString(),
+    headers: {
+      "Content-Type": "application/json",
+      "x-rapidapi-host": RAPIDAPI_HOST,
+      "x-rapidapi-key": RAPIDAPI_KEY
+    },
+    body: JSON.stringify({
+      source_url: sourceUrl,
+      target_url: targetUrl
+    }),
   });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.message || `API error ${res.status}`); }
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.message || `API error ${res.status}`);
+  }
   onProgress(85, "Processing...");
   const data = await res.json();
-  const out = data?.result_url || data?.output_url || data?.image_url || data?.result || data?.output || data?.url;
+  const out = data?.image_url || data?.result_url || data?.output_url || data?.result || data?.output || data?.url;
   if (!out) throw new Error("No output image returned");
   onProgress(100, "Done!");
   return out;
@@ -187,4 +198,4 @@ export default function FaceSwapApp() {
       {processing && <ProcessingOverlay progress={progress} statusText={statusText} />}
     </div>
   );
-}
+                       }
