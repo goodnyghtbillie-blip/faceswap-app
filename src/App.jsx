@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 
 const RAPIDAPI_KEY  = "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148";
-const RAPIDAPI_URL = `https://${RAPIDAPI_HOST}/swap`;
-const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/swap-face`;
+const RAPIDAPI_HOST = "deepfake-face-swap-p.rapidapi.com";
+const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/swap`;
 const IMGBB_KEY     = "0bb61baa964c3c1577a7e26924ca4379";
 
 function fileToBase64(file) {
@@ -41,8 +41,8 @@ async function callFaceSwapAPI(srcB64, tgtB64, onProgress) {
       "x-rapidapi-key": RAPIDAPI_KEY
     },
     body: JSON.stringify({
-      source_url: sourceUrl,
-      target_url: targetUrl
+      source: sourceUrl,
+      target: targetUrl
     }),
   });
   if (!res.ok) {
@@ -198,4 +198,4 @@ export default function FaceSwapApp() {
       {processing && <ProcessingOverlay progress={progress} statusText={statusText} />}
     </div>
   );
-                       }
+      }
