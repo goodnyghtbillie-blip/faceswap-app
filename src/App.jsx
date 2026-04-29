@@ -1,9 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 
-const RAPIDAPI_KEY  = "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148";
-const RAPIDAPI_HOST = "deepfake-face-swap-p.rapidapi.com";
-const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/swap`;
-const IMGBB_KEY     = "0bb61baa964c3c1577a7e26924ca4379";
+const IMGBB_KEY = "0bb61baa964c3c1577a7e26924ca4379";
 
 function fileToBase64(file) {
   return new Promise((res, rej) => {
@@ -33,17 +30,10 @@ async function callFaceSwapAPI(srcB64, tgtB64, onProgress) {
   onProgress(30, "Uploading target...");
   const targetUrl = await uploadToImgBB(tgtB64);
   onProgress(55, "Running AI swap...");
-  const res = await fetch(RAPIDAPI_URL, {
+  const res = await fetch("/api/swap", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-rapidapi-host": RAPIDAPI_HOST,
-      "x-rapidapi-key": RAPIDAPI_KEY
-    },
-    body: JSON.stringify({
-      source: sourceUrl,
-      target: targetUrl
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source: sourceUrl, target: targetUrl }),
   });
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
@@ -51,8 +41,11 @@ async function callFaceSwapAPI(srcB64, tgtB64, onProgress) {
   }
   onProgress(85, "Processing...");
   const data = await res.json();
-  const out = data?.image_url || data?.result_url || data?.output_url || data?.result || data?.output || data?.url;
+  let out = data?.result;
   if (!out) throw new Error("No output image returned");
+  if (!out.startsWith("http") && !out.startsWith("data:")) {
+    out = `data:image/jpeg;base64,${out}`;
+  }
   onProgress(100, "Done!");
   return out;
 }
@@ -150,13 +143,11 @@ export default function FaceSwapApp() {
     setResult(null); setProgress(0); setStatusText(""); setError(null); setStep("upload");
   };
 
-  const handleDownload = async () => {
-    try {
-      const res = await fetch(result); const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = "faceswap.jpg"; a.click();
-      URL.revokeObjectURL(url);
-    } catch { window.open(result, "_blank"); }
+  const handleDownload = () => {
+    const a = document.createElement("a");
+    a.href = result;
+    a.download = "faceswap.jpg";
+    a.click();
   };
 
   return (
