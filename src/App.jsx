@@ -17,7 +17,7 @@ async function uploadToImgBB(base64) {
   const b64 = base64.replace(/^data:image\/[a-z]+;base64,/, "");
   const form = new FormData();
   form.append("image", b64);
-  const res = await fetch("https://api.imgbb.com/1/upload?key=2e9a7b0a3b1c8d4e5f6a7b8c9d0e1f2a", { method: "POST", body: form });
+  const res = await fetch("https://api.imgbb.com/1/upload?key=0bb61baa964c3c1577a7e26924ca4379“ { method: "POST", body: form });
   const data = await res.json();
   if (!data?.data?.url) throw new Error("Image upload failed");
   return data.data.url;
