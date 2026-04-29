@@ -1,13 +1,36 @@
 export default async function handler(req, res) {
-  const response = await fetch("https://deepfake-face-swap-p.rapidapi.com/swap", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-rapidapi-host": "deepfake-face-swap-p.rapidapi.com",
-      "x-rapidapi-key": "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148"
-    },
-    body: JSON.stringify(req.body)
-  });
-  const data = await response.json();
-  res.status(200).json(data);
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  let body = req.body;
+
+  // Parse body if it's a string (Vercel sometimes doesn't auto-parse)
+  if (typeof body === "string") {
+    try { body = JSON.parse(body); } catch { body = {}; }
+  }
+
+  const { source, target } = body || {};
+
+  if (!source || !target) {
+    return res.status(400).json({ message: "Missing source or target" });
+  }
+
+  try {
+    const response = await fetch("https://deepfake-face-swap-p.rapidapi.com/swap", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-rapidapi-host": "deepfake-face-swap-p.rapidapi.com",
+        "x-rapidapi-key": "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148"
+      },
+      body: JSON.stringify({ source, target })
+    });
+
+    const data = await response.json();
+    return res.status(200).json(data);
+
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Proxy failed" });
+  }
 }
