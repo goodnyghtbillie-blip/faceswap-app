@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 const RAPIDAPI_KEY  = "90bd11435amsh1151c74d53568d2p10f953jsn8d127ffa3148";
-const RAPIDAPI_HOST = "deepfake-face-swap-ai.p.rapidapi.com";
+const RAPIDAPI_URL = `https://${RAPIDAPI_HOST}/swap`;
 const RAPIDAPI_URL  = `https://${RAPIDAPI_HOST}/swap-face`;
 const IMGBB_KEY     = "0bb61baa964c3c1577a7e26924ca4379";
 
