@@ -4,8 +4,6 @@ export default async function handler(req, res) {
   }
 
   let body = req.body;
-
-  // Parse body if it's a string (Vercel sometimes doesn't auto-parse)
   if (typeof body === "string") {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
@@ -13,7 +11,7 @@ export default async function handler(req, res) {
   const { source, target } = body || {};
 
   if (!source || !target) {
-    return res.status(400).json({ message: "Missing source or target" });
+    return res.status(400).json({ message: "Missing source or target", body: req.body });
   }
 
   try {
@@ -27,10 +25,18 @@ export default async function handler(req, res) {
       body: JSON.stringify({ source, target })
     });
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    const text = await response.text();
+
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+    return res.status(response.status).json(data);
 
   } catch (err) {
-    return res.status(500).json({ message: err.message || "Proxy failed" });
+    return res.status(500).json({ 
+      message: err.message,
+      cause: err.cause?.message || null,
+      type: err.name
+    });
   }
 }
